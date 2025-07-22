@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Modal from "./Modal";
 import Alert from "./Alert";
 import { CiTrash, CiCircleAlert } from "react-icons/ci";
+import { Link } from "react-router-dom";
 
 function Ingresos() {
   const [registros, setRegistros] = useState({
@@ -61,10 +62,13 @@ function Ingresos() {
     totalDiaAnterior: 1200.75,
   });
   useEffect(() => {
+
+    //Propiedad que calcula los ingresos automaticamente
     const totalIngresos = registros.ingresos.reduce(
       (total, ingreso) => total + ingreso.monto,
       0
     );
+     //Propiedad que calcula los egresos automaticamente
     const totalEgresos = registros.egresos.reduce(
       (total, egreso) => total + egreso.monto,
       0
@@ -171,6 +175,11 @@ function Ingresos() {
   return (
     <>
       <div className="w-[90%] m-auto my-6">
+        <Link to='/'>
+        <div>
+          <button className="btn btn-outline">Regresar inicio</button>
+        </div>
+        </Link>
         <form onSubmit={handleSubmit}>
           <div className=" md:w-[80%] grid md:grid-cols-4 md:gap-2 sm:grid-cols-1 p-6 rounded-lg m-auto border-1 border-gray-500 shadow-md ">
             <div className="flex flex-col items-center">
