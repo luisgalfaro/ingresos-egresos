@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import Modal from "./Modal";
-import Alert from "./Alert";
+import Modal from "./registro_components/Modal";
+import Alert from "./registro_components/Alert";
 import { CiTrash, CiCircleAlert } from "react-icons/ci";
 import { Link } from "react-router-dom";
+import api from "../../api/axios";
 
-function Ingresos() {
+function Registro() {
   const [registros, setRegistros] = useState({
     id: "fin-2023-11-14-001",
     fecha: "2023-11-14",
@@ -61,14 +62,36 @@ function Ingresos() {
     totalEgresos: 1000.0,
     totalDiaAnterior: 1200.75,
   });
+
+  const [data, setData] = useState({});
   useEffect(() => {
+    //peticion a la api
+
+    api
+      .get("najera-registros/_all_docs?include_docs=true")
+      .then((response) => {
+        if (response.status === 200) {
+          const docs = response.data.rows.map((row) => row.doc); // Solo extrae los `doc`
+          setData(docs);
+          response.data.rows.map((doc) => console.log(doc.doc));
+        } else {
+          console.log("ERROR AL OBTENER LA PETICION");
+        }
+      })
+      .catch((error) => {
+        console.log("ERROR AL HACER LA PETICION", error);
+      });
 
     //Propiedad que calcula los ingresos automaticamente
+
+    //Propiedad que calcula los egresos automaticamente
+  }, []); // Solo se recalcula cuando cambian estos arrays
+
+  useEffect(() => {
     const totalIngresos = registros.ingresos.reduce(
       (total, ingreso) => total + ingreso.monto,
       0
     );
-     //Propiedad que calcula los egresos automaticamente
     const totalEgresos = registros.egresos.reduce(
       (total, egreso) => total + egreso.monto,
       0
@@ -80,7 +103,7 @@ function Ingresos() {
       totalEgresos,
       totalDia: totalIngresos - totalEgresos,
     }));
-  }, [registros.ingresos, registros.egresos]); // Solo se recalcula cuando cambian estos arrays
+  }, [registros.ingresos, registros.egresos]);
 
   const [nuevoRegistro, setnuevoRegistro] = useState({
     titulo: "",
@@ -175,11 +198,6 @@ function Ingresos() {
   return (
     <>
       <div className="w-[90%] m-auto my-6">
-        <Link to='/'>
-        <div>
-          <button className="btn btn-outline">Regresar inicio</button>
-        </div>
-        </Link>
         <form onSubmit={handleSubmit}>
           <div className=" md:w-[80%] grid md:grid-cols-4 md:gap-2 sm:grid-cols-1 p-6 rounded-lg m-auto border-1 border-gray-500 shadow-md ">
             <div className="flex flex-col items-center">
@@ -348,4 +366,4 @@ function Ingresos() {
   );
 }
 
-export default Ingresos;
+export default Registro;
