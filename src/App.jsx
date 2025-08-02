@@ -16,7 +16,7 @@ function App() {
           <Route index element={<HomePage />} />
           <Route path="perfil" element={<PerfilPage />} />
           <Route path="agregar" element={<AgregarPage />} />
-          <Route path="registro" element={<RegistroDetallePage />} />
+          <Route path="registro/:id" element={<RegistroDetallePage />} />
         </Route>
       </Routes>
     </Router>

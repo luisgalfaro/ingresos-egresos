@@ -4,95 +4,39 @@ import Alert from "./registro_components/Alert";
 import { CiTrash, CiCircleAlert } from "react-icons/ci";
 import { Link } from "react-router-dom";
 import api from "../../api/axios";
+import { useParams } from "react-router-dom";
 
 function Registro() {
-  const [registros, setRegistros] = useState({
-    id: "fin-2023-11-14-001",
-    fecha: "2023-11-14",
-    ingresos: [
-      {
-        id: "ing-001",
-        titulo: "Venta al por mayor",
-        monto: 980.0,
-        fecha: "2023-11-14",
-        hora: "10:45",
-        usuario: {
-          id: "usr-002",
-          nombre: "Juan Pérez",
-        },
-      },
-      {
-        id: "ing-002",
-        titulo: "Servicio técnico",
-        monto: 470.5,
-        fecha: "2023-11-14",
-        hora: "15:30",
-        usuario: {
-          id: "usr-003",
-          nombre: "Laura González",
-        },
-      },
-    ],
-    egresos: [
-      {
-        id: "eg-001",
-        titulo: "Alquiler de local",
-        monto: 600.0,
-        fecha: "2023-11-14",
-        hora: "09:00",
-        usuario: {
-          id: "usr-001",
-          nombre: "Carlos Méndez",
-        },
-      },
-      {
-        id: "eg-002",
-        titulo: "Compra de equipo",
-        monto: 400.0,
-        fecha: "2023-11-14",
-        hora: "12:15",
-        usuario: {
-          id: "usr-004",
-          nombre: "Ana Rodríguez",
-        },
-      },
-    ],
-    totalDia: 450.5,
-    totalIngresos: 1450.5,
-    totalEgresos: 1000.0,
-    totalDiaAnterior: 1200.75,
-  });
+  const [registros, setRegistros] = useState({});
+  const { id } = useParams();
 
-  const [data, setData] = useState({});
-  useEffect(() => {
-    //peticion a la api
-
+  const obtenerRegistro = () => {
     api
-      .get("najera-registros/_all_docs?include_docs=true")
+      .get(`/najera-registros/${id}`)
       .then((response) => {
-        if (response.status === 200) {
-          const docs = response.data.rows.map((row) => row.doc); // Solo extrae los `doc`
-          setData(docs);
-          response.data.rows.map((doc) => console.log(doc.doc));
+        if (response.status == 200) {
+          setRegistros(response.data);
+          console.log("data", response.data);
         } else {
-          console.log("ERROR AL OBTENER LA PETICION");
+          console.log("error al obtener el registro");
         }
       })
       .catch((error) => {
-        console.log("ERROR AL HACER LA PETICION", error);
+        console.log(error);
       });
+  };
 
-    //Propiedad que calcula los ingresos automaticamente
-
-    //Propiedad que calcula los egresos automaticamente
+  useEffect(() => {
+    //peticion a la api
+    obtenerRegistro();
   }, []); // Solo se recalcula cuando cambian estos arrays
 
   useEffect(() => {
-    const totalIngresos = registros.ingresos.reduce(
+    const totalIngresos = registros.ingresos?.reduce(
       (total, ingreso) => total + ingreso.monto,
       0
     );
-    const totalEgresos = registros.egresos.reduce(
+    const totalEgresos = registros.egresos?.reduce(
       (total, egreso) => total + egreso.monto,
       0
     );
@@ -250,7 +194,9 @@ function Registro() {
         <div className="bg-indigo-900 p-5 mt-5 rounded-lg flex justify-between items-center md:w-[80%] m-auto">
           <h2>Fecha: {registros.fecha}</h2>
           <h2>Total del dia</h2>
-          <div className="badge badge-primary mx-5">${registros.totalDia}</div>
+          <div className="badge badge-primary mx-5">
+            ${registros.totalDia + Number(registros.totalDiaAnterior || 0)}
+          </div>
         </div>
 
         <div className=" m-auto my-5 grid grid-cols-1 md:w-[80%] md:grid-cols-2 md:gap-5  items-start">
@@ -265,8 +211,13 @@ function Registro() {
                   <th>Acciones</th>
                 </tr>
               </thead>
+
               <tbody>
-                {registros.ingresos.map((ingreso, index) => (
+                <tr>
+                  <th>Saldio del dian anterior</th>
+                  <td>${registros.totalDiaAnterior}</td>
+                </tr>
+                {registros.ingresos?.map((ingreso, index) => (
                   <tr key={index}>
                     <th>{ingreso.titulo}</th>
                     <td>${ingreso.monto}</td>
@@ -318,7 +269,7 @@ function Registro() {
                 </tr>
               </thead>
               <tbody>
-                {registros.egresos.map((egreso, index) => (
+                {registros.egresos?.map((egreso, index) => (
                   <tr key={index}>
                     <th>{egreso.titulo}</th>
                     <td>${egreso.monto}</td>

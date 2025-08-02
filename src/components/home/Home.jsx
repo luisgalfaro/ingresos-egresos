@@ -26,7 +26,26 @@ export default function Home() {
             Buscar
           </button>
         </div>
-        <div className="md:w-4/5 mx-auto py-8">
+
+        <div className="">
+          <div className="mx-auto py-8">
+            <div className="badge badge-soft badge-primary">
+              Registro del dia
+            </div>
+            <div class="card w-full bg-base-200 card-md shadow-sm cursor-pointer my-4 ">
+              <div class="card-body">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <FiCalendar size="18px" />
+                    <h2 class="card-title">Domingo 21/01/2025</h2>
+                  </div>
+                  <div class="badge badge-soft badge-info">Saldo: $500.00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mx-auto py-8">
           <div className="badge badge-soft badge-primary">
             Ultimos registros
           </div>
