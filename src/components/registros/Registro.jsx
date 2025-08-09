@@ -8,6 +8,10 @@ import { useParams } from "react-router-dom";
 
 function Registro() {
   const [registros, setRegistros] = useState({});
+  const [alertText, setAlertaText] = useState({
+    texto: "",
+    type: "",
+  });
   const { id } = useParams();
 
   const obtenerRegistro = () => {
@@ -16,7 +20,7 @@ function Registro() {
       .then((response) => {
         if (response.status == 200) {
           setRegistros(response.data);
-          console.log("data", response.data);
+          // console.log("data", response.data);
         } else {
           console.log("error al obtener el registro");
         }
@@ -32,14 +36,16 @@ function Registro() {
   }, []); // Solo se recalcula cuando cambian estos arrays
 
   useEffect(() => {
-    const totalIngresos = registros.ingresos?.reduce(
+    let totalIngresos = registros.ingresos?.reduce(
       (total, ingreso) => total + ingreso.monto,
       0
     );
-    const totalEgresos = registros.egresos?.reduce(
+    let totalEgresos = registros.egresos?.reduce(
       (total, egreso) => total + egreso.monto,
       0
     );
+
+    totalIngresos = totalIngresos + Number(registros.totalDiaAnterior);
 
     setRegistros((prev) => ({
       ...prev,
@@ -55,8 +61,8 @@ function Registro() {
     fecha: new Date().toISOString().split("T")[0],
     hora: new Date().toTimeString().slice(0, 5),
     usuario: {
-      id: "usr-002",
-      nombre: "Juan Pérez",
+      id: "1",
+      nombre: "demo-usuario",
     },
   });
 
@@ -70,65 +76,78 @@ function Registro() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Nuevo registro:", nuevoRegistro);
-    console.log(transaccion);
+    if (!transaccion) return;
 
+    const nuevo = {
+      ...nuevoRegistro,
+      monto: parseFloat(nuevoRegistro.monto),
+    };
+
+    let nuevoEstado;
     if (transaccion === "Ingreso") {
-      const nuevoIngreso = {
-        ...nuevoRegistro,
-        monto: parseFloat(nuevoRegistro.monto),
+      nuevoEstado = {
+        ...registros,
+        ingresos: [...(registros.ingresos || []), nuevo],
       };
-      setRegistros((prev) => ({
-        ...prev,
-        ingresos: [...prev.ingresos, nuevoIngreso],
-      }));
-      const id = `ing-${Math.floor(Math.random() * 1000)}`;
-      setnuevoRegistro({
-        id: id,
-        titulo: "",
-        monto: "",
-        fecha: new Date().toISOString().split("T")[0],
-        hora: new Date().toTimeString().slice(0, 5),
-        usuario: {
-          id: "usr-002",
-          nombre: "Juan Pérez",
-        },
-      });
-
-      setAlerta(true);
-      setTimeout(() => {
-        setAlerta(false);
-      }, 5000);
+      nuevoEstado.totalIngresos = registros.totalIngresos + nuevo.monto;
+    } else if (transaccion === "Egreso") {
+      nuevoEstado = {
+        ...registros,
+        egresos: [...(registros.egresos || []), nuevo],
+      };
+      nuevoEstado.totalEgresos = registros.totalEgresos + nuevo.monto;
     }
 
-    if (transaccion === "Egreso") {
-      const nuevoEgreso = {
-        ...nuevoRegistro,
-        monto: parseFloat(nuevoRegistro.monto),
-      };
-      setRegistros((prev) => ({
-        ...prev,
-        egresos: [...prev.egresos, nuevoEgreso],
-      }));
-      const id = `ing-${Math.floor(Math.random() * 1000)}`;
+    nuevoEstado.totalDia = nuevoEstado.totalIngresos - nuevoEstado.totalEgresos;
+    // Actualizar el estado local
+    setRegistros(nuevoEstado);
 
-      setnuevoRegistro({
-        id: id,
-        titulo: "",
-        monto: "",
-        fecha: new Date().toISOString().split("T")[0],
-        hora: new Date().toTimeString().slice(0, 5),
-        usuario: {
-          id: "usr-002",
-          nombre: "Juan Pérez",
-        },
+    // Enviar la actualización a CouchDB
+    api
+      .put(`/najera-registros/${id}`, nuevoEstado)
+      .then((response) => {
+        if (response.status == 201) {
+          console.log("rev acntiguo", registros._rev);
+          console.log("rev nuevo", response.data.rev);
+          setRegistros((prev) => ({
+            ...prev,
+            _rev: response.data.rev, // o response.data._rev, según tu API
+          }));
+
+          setAlertaText({
+            texto: "Se registro con exito su registro",
+            type: "positive",
+          });
+          setAlerta(true);
+          setTimeout(() => {
+            setAlerta(false);
+          }, 5000);
+        }
+      })
+      .catch((error) => {
+        console.log("error al actulizar", error);
+        setAlertaText({
+          texto: "Ocurrio un error al conectar con la base datos",
+          error,
+          type: "",
+        });
+        setAlerta(true);
+        setTimeout(() => {
+          setAlerta(false);
+        }, 5000);
       });
 
-      setAlerta(true);
-      setTimeout(() => {
-        setAlerta(false);
-      }, 5000);
-    }
+    // Resetear el formulario
+    setnuevoRegistro({
+      titulo: "",
+      monto: "",
+      fecha: new Date().toISOString().split("T")[0],
+      hora: new Date().toTimeString().slice(0, 5),
+      usuario: {
+        id: "1",
+        nombre: "demo-usuario",
+      },
+    });
   };
 
   const handleDelete = (id, ingreso) => {
@@ -192,11 +211,9 @@ function Registro() {
           </div>
         </form>
         <div className="bg-indigo-900 p-5 mt-5 rounded-lg flex justify-between items-center md:w-[80%] m-auto">
-          <h2>Fecha: {registros.fecha}</h2>
+          <h2> {registros.fecha}</h2>
           <h2>Total del dia</h2>
-          <div className="badge badge-primary mx-5">
-            ${registros.totalDia + Number(registros.totalDiaAnterior || 0)}
-          </div>
+          <div className="badge badge-primary mx-5">${registros.totalDia}</div>
         </div>
 
         <div className=" m-auto my-5 grid grid-cols-1 md:w-[80%] md:grid-cols-2 md:gap-5  items-start">
@@ -311,7 +328,9 @@ function Registro() {
             </div>
           </div>
         </div>
-        {alerta ? <Alert texto="Registro agregado correctamente" /> : null}
+        {alerta ? (
+          <Alert texto={alertText.texto} type={alertText.type} />
+        ) : null}
       </div>
     </>
   );

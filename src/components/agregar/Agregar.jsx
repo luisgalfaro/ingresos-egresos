@@ -33,6 +33,7 @@ export default function Agregar() {
       .then((response) => {
         if (response.status == 200) {
           setRegistro(response.data.docs);
+          // console.log("registros", response.data);
         } else {
           console.log("error al obtener el registro");
         }
@@ -43,6 +44,18 @@ export default function Agregar() {
   };
 
   const handleSubmit = () => {
+    if (!nuevoRegistro.fecha) {
+      setAlertaText({
+        texto: "Debe introducir datos",
+        type: "",
+      });
+      setAlerta(true);
+      setTimeout(() => {
+        setAlerta(false);
+      }, 5000);
+      document.getElementById("my_modal_3").close();
+      return;
+    }
     api
       .post("/najera-registros", nuevoRegistro)
       .then((response) => {
@@ -67,7 +80,7 @@ export default function Agregar() {
           obtenerRegistro();
           document.getElementById("my_modal_3").close();
         } else {
-          console.log("error al crear el registro");
+          // console.log("error al crear el registro");
           setAlertaText({
             texto: "Regrsitro no se pudo crear",
             type: "negative",
@@ -117,11 +130,8 @@ export default function Agregar() {
           </div>
         ) : (
           registro.map((reg) => (
-            <Link to={`/registro/${reg._id}`}>
-              <div
-                key={reg._id}
-                className="card w-full bg-base-200 card-md shadow-sm cursor-pointer my-16 "
-              >
+            <Link to={`/registro/${reg._id}`} key={reg._id}>
+              <div className="card w-full bg-base-200 card-md shadow-sm cursor-pointer my-16 ">
                 <div className="card-body">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
@@ -183,7 +193,7 @@ export default function Agregar() {
             </div>
             <button className="btn btn-primary md:mt-0" type="submit">
               <FiPlus />
-              Crear nuevo regustro
+              Crear nuevo registro
             </button>
           </form>
         </div>
